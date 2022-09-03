@@ -106,7 +106,7 @@ export default function App() {
       <View style={styles.inputContainer}>
         <TextInput placeholder="new task" style={styles.input} />
         <Button
-          title="ADD"
+          title="asd"
           onPress={() => console.warn("hola")}
           color="#3D5A80"
         />
