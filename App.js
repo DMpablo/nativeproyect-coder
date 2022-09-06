@@ -1,18 +1,34 @@
-import { StyleSheet, Text, View, Button, TextInput, SafeAreaView, FlatList } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  Button,
+  TextInput,
+  SafeAreaView,
+  FlatList,
+  TouchableOpacity,
+  Modal 
+} from "react-native";
 import { useEffect, useState } from "react";
 
-const styleColors = {
+const paletColors = {
   colorOne: "#EE6C4D",
   colorTwo: "#E0FBFC",
   colorTree: "#98C1D9",
   colorFor: "#3D5A80",
-  colorSix: "#293241",
+  colorFive: "#293241",
 };
 
 const styles = StyleSheet.create({
+  containerLoading: {
+    flex: 1,
+    backgroundColor: paletColors.colorTwo,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   container: {
     flex: 1,
-    backgroundColor: styleColors.colorSix,
+    backgroundColor: paletColors.colorFive,
   },
   inputContainer: {
     marginTop: 50,
@@ -23,7 +39,6 @@ const styles = StyleSheet.create({
   },
   inputMultiContainer: {
     flex: 1,
-    // justifyContent:'center',
     alignItems: "center",
     marginTop: 50,
     marginBottom: 20,
@@ -32,99 +47,133 @@ const styles = StyleSheet.create({
 
   input: {
     width: "75%",
-    borderBottomColor: "#3D5A80",
+    borderBottomColor: paletColors.colorTree,
     borderBottomWidth: 1,
+    fontSize: 20,
     height: 40,
-    color: "#3D5A80",
+    color: paletColors.colorTwo,
   },
-  item: {
-    backgroundColor: '#f9c2ff',
+  container_item: {
+    backgroundColor: paletColors.colorFive,
     padding: 20,
     marginVertical: 8,
     marginHorizontal: 16,
+    borderRadius: 4,
+    borderWidth: 1,
+    borderColor: paletColors.colorFor,
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 3,
+    },
+    shadowOpacity: 0.29,
+    shadowRadius: 4.65,
+
+    elevation: 7,
   },
   title: {
-    fontSize: 32,
+    color: paletColors.colorTwo,
+    fontSize: 22,
+  },
+  item: {
+    margin: 0,
   },
 });
 
-const DATA = [
-  {
-    id: "bd7acbea-c1b1-46c2-aed5-3ad53abb28ba",
-    title: "First Item",
-  },
-  {
-    id: "3ac68afc-c605-48d3-a4f8-fbd91aa97f63",
-    title: "Second Item",
-  },
-  {
-    id: "58694a0f-3da1-471f-bd96-145571e29d72",
-    title: "Third Item",
-  },
-];
 
-const Item = ({ title }) => (
-  <View style={styles.item}>
-    <Text style={styles.title}>{title}</Text>
-  </View>
-);
-
-// fetch('https://jsonplaceholder.typicode.com/todos/1')
-//   .then(response => response.json())
-//   .then(json => console.log(json))
 
 export default function App() {
+  const [textInput, setTextInput] = useState("");
+  const [item, setItem] = useState([]); //para seghuir el curso
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
+  const onHandleDeleteItem = (id) => {
+    setItem(item.filter((item) => item.id !== id));
+    setSelectedTask(null);
+    setModalVisible(!modalVisible);
+  }
+
+  const onHandleModal = (id) => {
+    setModalVisible(!modalVisible);
+    setSelectedTask(item.find((item) => item.id === id))
+    console.warn(id);
+  }
   
-  const renderItem = ({ item }) => <Item title={item.title} />;
-  const [isLoading, setIsLoading] = useState(true);
-  const [imageUrl, setImageUrl] = useState(null);
+  const Item = ({ item }) => (
+    <View style={styles.container_item}>
+      <Text style={styles.title}>{item.value}</Text>
+  
+      <TouchableOpacity style={styles.button} onPress={() => onHandleModal(item.id)}>
+          <Text style={styles.delete}>X</Text>
+        </TouchableOpacity>
+    </View>
+  );
+  
+  const renderItem = ({ item }) => <Item item={item} />;
 
-  useEffect(() => {
-    fetch('https://jsonplaceholder.typicode.com/todos/1')
-      .then((response) => response.json())
-      .then(json => console.warn(json))
-      // (json) => {
-      //   setImageUrl(json);
-      //   setIsLoading(false);
-      // });
-      // console.warn(imageUrl);
-  }, []);
+  const onHandleText = (e) => {
+    setTextInput(e);
+  };
 
-
-  // if (isLoading) { // ⬅️ si está cargando, mostramos un texto que lo indique
-  //   return (
-  //     <div className="App">
-  //       <h1>Cargando...</h1>
-  //     </div>
-  //   );
-  // }
-
+  const addItem = () => {
+    setItem((prev) => [
+      ...prev,
+      {
+        id: Date.now(),
+        value: textInput,
+      },
+    ]);
+    setTextInput("");
+    // console.log(data);
+  };
 
 
   return (
     <View style={styles.container}>
       <View style={styles.inputContainer}>
-        <TextInput placeholder="new task" style={styles.input} />
-        <Button
-          title="asd"
-          onPress={() => console.warn("hola")}
-          color="#3D5A80"
+        <TextInput
+          style={styles.input}
+          onChangeText={onHandleText}
+          value={textInput}
         />
+        <Button title="add" onPress={addItem} />
       </View>
+
       <SafeAreaView style={styles.container}>
         <FlatList
-          data={DATA}
+          data={item}
           renderItem={renderItem}
           keyExtractor={(item) => item.id}
         />
       </SafeAreaView>
+      <Modal animationType='slide' visible={modalVisible}>
+        <View style={styles.modalContainer}>
+          <Text style={styles.modalTitle}>Detalle de la lista</Text>
+        </View>
+        <View style={styles.modalMessageContainer}> 
+          <Text style={styles.modalMessage}>¿Estas seguro de que quieres eliminar?</Text>
+        </View>
+        <View style={styles.modalMessageContainer}> 
+          <Text style={styles.selectedTask}>{selectedTask?.value}</Text>
+        </View>
+        <View style={styles.buttonContainer}>
+          <Button 
+            title='Eliminar'
+            onPress={() => onHandleDeleteItem(selectedTask?.id)}
+            color='#4A306D'
+          />
+          <Button 
+            title='Cancelar'
+            onPress={() => setModalVisible(!modalVisible)}
+            color='#cccccc'
+          />
+        </View>
+      </Modal>
     </View>
   );
 }
-
-// Paleta de colores
-// #293241
-// #EE6C4D
-// #E0FBFC
-// #98C1D9
-// #3D5A80
